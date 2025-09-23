@@ -1,65 +1,58 @@
 # Flight Aggregator
 
-The goal of the api is to get every flight to a destination and sort it by : 
-    - price,
-    - departure date
-    - travel time
-  
-# exercices : 
-- create a server (http.Server)
-- set 2 routes (http.ServeMux):
-  - GET /health : to verify the healthiness of the server 
-    - set the status response to 200 : w.WriteHeader(http.StatusCreated)
-  - GET /flight.
-- try to get the data of both apis from the server (client requests).
-  - transform the data into structs (json.NewDecoder)
-  - and organize the code to process the data in 2 repositories and extract the it using the same interface.
-- return the flights ordered by price
-- now you want to sort by price, time_travel or departure_date :
-  - pass this information by query/params or body,
-  - create the algorithms,
-  - verify the output
-- Create tests for :
-  - your sorting algorithms,
-  - your flight service :
-    - mock the repositories to make the tests.
+## Groupe
+- Thomas L.
+- David W.
+- Antoine H.
+- Eden O.
 
-# to help you
+## Projet
 
-## pre-setup
+Fork de [flight-aggregator par Romain Chenard](https://github.com/RomainC75/flight-aggregator)  
+Projet réalisé dans le cadre du cours de Golang en suivant les consignes du repo original.
 
-  - install Docker Compose and start the project with: docker compose up
-  - air is setup to auto reload the project on every modification !
-  - a make file is here to run the tests with gotestsum :
-    - install it with : `go install gotest.tools/gotestsum@latest`
+## Installation
 
-## Run the base project: 
-- `docker compose build`
-- `docker compose up`
+1. Cloner le repository
+```bash
+git clone https://github.com/Orden14/flight-aggregator
+cd flight-aggregator
+```
 
-## test 
-- `make test`
+2. Build et run le projet
+```bash
+docker-compose up -d
+```
 
-## access the apis : 
-- j-server1 :
-  - docker : http://j-server1:4001
-  - localhost : http://localhost:4001
-- j-server2 : 
-  - docker : http://j-server2:4001
-  - localhost : http://localhost:4001
+## Structure du projet
 
+- `/main.go` : Point d'entrée de l'application
+- `/config/` : contient `config.go` pour la gestion de la configuration de l'application
+- `/httpserver/` : contient `router.go` pour la gestion des routes HTTP (equivalent d'un controleur)
+- `/handler/` : contient les handlers pour la gestion des requêtes HTTP
+- `/domain/` : contient les structures de données internes à l'application
+- `/model/` : contient les structures de données des booking et des vols en fonction du schema de donnée des deux serveurs JSON
+- `/repository/` : contient les repositories pour la gestion des appels aux serveurs JSON
+- `/service/` : contient `flight_service.go` pour la logique métier
+- `/sorter/` : contient les fonctions de tri des vols
 
-startup : 
-- use the Viper library [Link Text](https://github.com/spf13/viper),
-- get every env variables with : viper.AutomaticEnv() 
-- then select with : viper.Get("MY_VAR")
+## Utilisation
 
-tests : 
-- use Testify : [Link Text](https://github.com/stretchr/testify)
+### A. Accès aux serveurs
 
+1. Serveur principal : http://localhost:3001/
+2. Serveurs JSON database 1 : http://localhost:4001/
+3. Serveurs JSON database 2 : http://localhost:4002/
 
-## notation 
-- project structure  :
-  - controller, service, repo
-  - interface
-  - env variable handling
+(customisable dans le [.env](.env))
+
+### B. Endpoints pour le serveur principal
+
+1. GET /health : Vérifie l'état de santé du serveur
+2. GET /flight : Récupère tous les vols (triés par prix par défaut)
+
+### C. Paramètres pour la route /flight
+
+- sort : Critère de tri (price, travel_time). Par défaut : price
+- from : Code IATA de l'aéroport de départ (ex: CDG)
+- to : Code IATA de l'aéroport d'arrivée (ex: HND)
