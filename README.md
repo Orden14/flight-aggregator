@@ -48,14 +48,15 @@ go test ./test -v
 - `/repository/` : contient les repositories pour la gestion des appels aux serveurs JSON
 - `/service/` : contient `flight_service.go` pour la logique métier
 - `/sorter/` : contient les fonctions de tri des vols
+- `/test/` : contient les tests unitaires de l'application
 
 ## Utilisation
 
 ### A. Accès aux serveurs
 
-1. Serveur principal : http://localhost:3001/
-2. Serveurs JSON database 1 : http://localhost:4001/
-3. Serveurs JSON database 2 : http://localhost:4002/
+1. Serveur principal : [localhost:3001/](http://localhost:3001/)
+2. Serveurs JSON database 1 : [localhost:4001/](http://localhost:4001/)
+3. Serveurs JSON database 2 : [localhost:4002/](http://localhost:4002/)
 
 (customisable dans le [.env](.env))
 
