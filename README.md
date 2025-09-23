@@ -24,6 +24,19 @@ cd flight-aggregator
 docker-compose up -d
 ```
 
+## Tests
+
+1. Installer les dépendances
+```bash
+cd server
+go mod tidy
+```
+
+2. lancer les tests
+``` bash
+go test ./test -v
+```
+
 ## Structure du projet
 
 - `/main.go` : Point d'entrée de l'application
@@ -48,11 +61,11 @@ docker-compose up -d
 
 ### B. Endpoints pour le serveur principal
 
-1. GET /health : Vérifie l'état de santé du serveur
-2. GET /flight : Récupère tous les vols (triés par prix par défaut)
+1. [GET] `/health` : Vérifie l'état de santé du serveur
+2. [GET] `/flight` : Récupère tous les vols (triés par prix par défaut)
 
 ### C. Paramètres pour la route /flight
 
-- sort : Critère de tri (price, travel_time). Par défaut : price
-- from : Code IATA de l'aéroport de départ (ex: CDG)
-- to : Code IATA de l'aéroport d'arrivée (ex: HND)
+- `sort` : Critère de tri (price, travel_time). Par défaut : price
+- `from` : Code IATA de l'aéroport de départ (ex: CDG)
+- `to` : Code IATA de l'aéroport d'arrivée (ex: HND)
