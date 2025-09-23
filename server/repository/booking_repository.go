@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -20,13 +21,20 @@ type BookingRepository struct {
 func NewBookingRepository(c config.JSONServerConfig) *BookingRepository {
 	return &BookingRepository{
 		baseURL: c.BaseURL(),
-		client:  &http.Client{Timeout: 10 * time.Second},
+		client:  &http.Client{Timeout: 0},
 	}
 }
 
-func (r *BookingRepository) Fetch() ([]domain.Flight, error) {
+func (r *BookingRepository) Fetch(ctx context.Context) ([]domain.Flight, error) {
 	url := fmt.Sprintf("%s/flight_to_book", r.baseURL)
-	resp, err := r.client.Get(url)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+
+	if err != nil {
+		return nil, fmt.Errorf("bookings build request: %w", err)
+	}
+
+	resp, err := r.client.Do(req)
 
 	if err != nil {
 		return nil, fmt.Errorf("bookings GET %s: %w", url, err)
@@ -56,10 +64,13 @@ func (r *BookingRepository) Fetch() ([]domain.Flight, error) {
 		last := it.Segments[len(it.Segments)-1].Flight
 
 		dep, err := time.Parse(time.RFC3339, first.Depart)
+
 		if err != nil {
 			return nil, fmt.Errorf("bookings bad depart %q: %w", first.Depart, err)
 		}
+
 		arr, err := time.Parse(time.RFC3339, last.Arrive)
+
 		if err != nil {
 			return nil, fmt.Errorf("bookings bad arrive %q: %w", last.Arrive, err)
 		}
@@ -75,6 +86,6 @@ func (r *BookingRepository) Fetch() ([]domain.Flight, error) {
 			Currency:      it.Total.Currency,
 		})
 	}
-	
+
 	return out, nil
 }
