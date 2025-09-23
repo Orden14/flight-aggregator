@@ -24,7 +24,7 @@ func (h *FlightHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	by := sorter.NormalizeSortBy(q.Get("sort"))
 	order := sorter.NormalizeOrder(q.Get("order"))
 
-	flights, err := h.svc.GetFlights(r.Context(), from, to, by, order)
+	flights, err := h.svc.GetFlights(from, to, by, order)
 
 	if err != nil {
 		http.Error(w, "failed to fetch flights: "+err.Error(), http.StatusBadGateway)

@@ -56,10 +56,13 @@ func (r *BookingRepository) Fetch() ([]domain.Flight, error) {
 		last := it.Segments[len(it.Segments)-1].Flight
 
 		dep, err := time.Parse(time.RFC3339, first.Depart)
+
 		if err != nil {
 			return nil, fmt.Errorf("bookings bad depart %q: %w", first.Depart, err)
 		}
+
 		arr, err := time.Parse(time.RFC3339, last.Arrive)
+
 		if err != nil {
 			return nil, fmt.Errorf("bookings bad arrive %q: %w", last.Arrive, err)
 		}
@@ -75,6 +78,6 @@ func (r *BookingRepository) Fetch() ([]domain.Flight, error) {
 			Currency:      it.Total.Currency,
 		})
 	}
-	
+
 	return out, nil
 }
