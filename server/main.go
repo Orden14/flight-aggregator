@@ -19,8 +19,8 @@ func main() {
 		log.Fatal("config error: ", err)
 	}
 
-	r1 := repository.NewFlightRepository(cfg.JServer1)
-	r2 := repository.NewBookingRepository(cfg.JServer2)
+	r1 := repository.NewServer1FlightRepository(cfg.JServer1)
+	r2 := repository.NewServer2FlightRepository(cfg.JServer2)
 
 	svc := service.NewFlightService(5, r1, r2)
 

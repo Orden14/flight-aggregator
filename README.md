@@ -44,7 +44,7 @@ go test ./test -v
 - `/httpserver/` : contient `router.go` pour la gestion des routes HTTP (equivalent d'un controleur)
 - `/handler/` : contient les handlers pour la gestion des requêtes HTTP
 - `/domain/` : contient les structures de données internes à l'application
-- `/model/` : contient les structures de données des booking et des vols en fonction du schema de donnée des deux serveurs JSON
+- `/model/` : contient les structures de données des vols en fonction du schema de donnée des deux serveurs JSON
 - `/repository/` : contient les repositories pour la gestion des appels aux serveurs JSON
 - `/service/` : contient `flight_service.go` pour la logique métier
 - `/sorter/` : contient les fonctions de tri des vols
@@ -62,7 +62,7 @@ go test ./test -v
 ### B. Endpoints pour le serveur principal
 
 1. [GET] `/health` : Vérifie l'état de santé du serveur
-2. [GET] `/flight` : Récupère tous les vols (triés par prix par défaut)
+2. [GET] `/flights` : Récupère tous les vols (triés par prix par défaut)
 
 ### C. Paramètres pour la route /flight
 

@@ -13,44 +13,44 @@ import (
 	"github.com/Orden14/flight-aggregator/model"
 )
 
-type BookingRepository struct {
+type Server2FlightRepository struct {
 	baseURL string
 	client  *http.Client
 }
 
-func NewBookingRepository(c config.JSONServerConfig) *BookingRepository {
-	return &BookingRepository{
+func NewServer2FlightRepository(c config.JSONServerConfig) *Server2FlightRepository {
+	return &Server2FlightRepository{
 		baseURL: c.BaseURL(),
 		client:  &http.Client{Timeout: 0},
 	}
 }
 
-func (r *BookingRepository) Fetch(ctx context.Context) ([]domain.Flight, error) {
+func (r *Server2FlightRepository) Fetch(ctx context.Context) ([]domain.Flight, error) {
 	url := fmt.Sprintf("%s/flight_to_book", r.baseURL)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 
 	if err != nil {
-		return nil, fmt.Errorf("bookings build request: %w", err)
+		return nil, fmt.Errorf("flight build request: %w", err)
 	}
 
 	resp, err := r.client.Do(req)
 
 	if err != nil {
-		return nil, fmt.Errorf("bookings GET %s: %w", url, err)
+		return nil, fmt.Errorf("flight GET %s: %w", url, err)
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<14))
-		return nil, fmt.Errorf("bookings status %d: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("flight status %d: %s", resp.StatusCode, string(body))
 	}
 
-	var items []model.BookingItem
+	var items []model.Server2FlightItem
 
 	if err := json.NewDecoder(resp.Body).Decode(&items); err != nil {
-		return nil, fmt.Errorf("bookings decode array: %w", err)
+		return nil, fmt.Errorf("flight decode array: %w", err)
 	}
 
 	out := make([]domain.Flight, 0, len(items))
@@ -66,13 +66,13 @@ func (r *BookingRepository) Fetch(ctx context.Context) ([]domain.Flight, error) 
 		dep, err := time.Parse(time.RFC3339, first.Depart)
 
 		if err != nil {
-			return nil, fmt.Errorf("bookings bad depart %q: %w", first.Depart, err)
+			return nil, fmt.Errorf("flight bad depart %q: %w", first.Depart, err)
 		}
 
 		arr, err := time.Parse(time.RFC3339, last.Arrive)
 
 		if err != nil {
-			return nil, fmt.Errorf("bookings bad arrive %q: %w", last.Arrive, err)
+			return nil, fmt.Errorf("flight bad arrive %q: %w", last.Arrive, err)
 		}
 
 		out = append(out, domain.Flight{
