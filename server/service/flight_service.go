@@ -1,15 +1,17 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"sync"
 
 	"github.com/Orden14/flight-aggregator/domain"
 	"github.com/Orden14/flight-aggregator/repository"
+	"github.com/Orden14/flight-aggregator/sorter"
 )
 
 type FlightService interface {
-	GetFlights() ([]domain.Flight, error)
+	GetFlights(ctx context.Context, from, to string, by sorter.SortBy, order sorter.Order) ([]domain.Flight, error)
 }
 
 type flightService struct {
@@ -20,7 +22,7 @@ func NewFlightService(repos ...repository.FlightRepositoryInterface) FlightServi
 	return &flightService{repos: repos}
 }
 
-func (s *flightService) GetFlights() ([]domain.Flight, error) {
+func (s *flightService) GetFlights(ctx context.Context, from, to string, by sorter.SortBy, order sorter.Order) ([]domain.Flight, error) {
 	if len(s.repos) == 0 {
 		return nil, errors.New("no repositories configured")
 	}
@@ -57,5 +59,22 @@ func (s *flightService) GetFlights() ([]domain.Flight, error) {
 		all = append(all, r.flights...)
 	}
 
-	return all, nil
+	filtered := all[:0]
+	for _, f := range all {
+		if from != "" && f.From != from {
+			continue
+		}
+		if to != "" && f.To != to {
+			continue
+		}
+		filtered = append(filtered, f)
+	}
+
+	sorter.SortFlights(filtered, by, order)
+
+	for i := range filtered {
+		filtered[i].TravelTimeMinutes = int(filtered[i].Duration().Minutes())
+	}
+
+	return filtered, nil
 }
