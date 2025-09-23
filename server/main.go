@@ -3,20 +3,36 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 
+	"github.com/Orden14/flight-aggregator/config"
 	"github.com/Orden14/flight-aggregator/handler"
 	"github.com/Orden14/flight-aggregator/httpserver"
+	"github.com/Orden14/flight-aggregator/repository"
+	"github.com/Orden14/flight-aggregator/service"
+	"github.com/spf13/viper"
 )
 
 func main() {
+	cfg, err := config.Load()
+
+	if err != nil {
+		log.Fatal("config error: ", err)
+	}
+
+	r1 := repository.NewFlightRepository(cfg.JServer1)
+	r2 := repository.NewBookingRepository(cfg.JServer2)
+
+	svc := service.NewFlightService(r1, r2)
+
 	health := handler.NewHealthHandler()
-	router := httpserver.NewRouter(health)
+	flight := handler.NewFlightHandler(svc)
+	router := httpserver.NewRouter(health, flight)
 
-	addr := ":3001"
-
-	if v := os.Getenv("PORT"); v != "" {
+	var addr string
+	if v := viper.GetString("SERVER_PORT"); v != "" {
 		addr = ":" + v
+	} else {
+		addr = ":3001"
 	}
 
 	log.Println("Flight Aggregator listening on", addr)
