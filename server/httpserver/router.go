@@ -20,7 +20,7 @@ func NewRouter(health *handler.HealthHandler, flights *handler.FlightHandler) ht
 		health.ServeHTTP(w, r)
 	})
 
-	mux.HandleFunc("/flight", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/flights", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.Header().Set("Allow", http.MethodGet)
 			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)

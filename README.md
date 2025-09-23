@@ -62,7 +62,7 @@ go test ./test -v
 ### B. Endpoints pour le serveur principal
 
 1. [GET] `/health` : Vérifie l'état de santé du serveur
-2. [GET] `/flight` : Récupère tous les vols (triés par prix par défaut)
+2. [GET] `/flights` : Récupère tous les vols (triés par prix par défaut)
 
 ### C. Paramètres pour la route /flight
 

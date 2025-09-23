@@ -1,6 +1,6 @@
 package model
 
-type FlightItem struct {
+type Server1FlightItem struct {
 	BookingID        string  `json:"bookingId"`
 	Status           string  `json:"status"`
 	PassengerName    string  `json:"passengerName"`
