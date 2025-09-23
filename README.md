@@ -12,9 +12,9 @@ The goal of the api is to get every flight to a destination and sort it by :
     - set the status response to 200 : w.WriteHeader(http.StatusCreated)
   - GET /flight.
 - try to get the data of both apis from the server (client requests).
-  - transform the data into structs
+  - transform the data into structs (json.NewDecoder)
   - and organize the code to process the data in 2 repositories and extract the data using the same interface.
-- return the flights orders by price
+- return the flights ordered by price
 - now you want to sort by price, time_travel or departure_date :
   - pass this information by query/params or body,
   - create the algorithms,
