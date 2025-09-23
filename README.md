@@ -69,3 +69,8 @@ go test ./test -v
 - `sort` : Critère de tri (price, travel_time). Par défaut : price
 - `from` : Code IATA de l'aéroport de départ (ex: CDG)
 - `to` : Code IATA de l'aéroport d'arrivée (ex: HND)
+
+Exemple de requête : 
+```
+http://localhost:3001/flights?sort=travel_time&order=asc
+```
