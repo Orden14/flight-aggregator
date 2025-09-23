@@ -22,13 +22,14 @@ func main() {
 	r1 := repository.NewFlightRepository(cfg.JServer1)
 	r2 := repository.NewBookingRepository(cfg.JServer2)
 
-	svc := service.NewFlightService(r1, r2)
+	svc := service.NewFlightService(5, r1, r2)
 
 	health := handler.NewHealthHandler()
 	flight := handler.NewFlightHandler(svc)
 	router := httpserver.NewRouter(health, flight)
 
 	var addr string
+
 	if v := viper.GetString("SERVER_PORT"); v != "" {
 		addr = ":" + v
 	} else {

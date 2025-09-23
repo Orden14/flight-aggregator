@@ -1,9 +1,11 @@
 package repository
 
 import (
+	"context"
+
 	"github.com/Orden14/flight-aggregator/domain"
 )
 
 type FlightRepositoryInterface interface {
-	Fetch() ([]domain.Flight, error)
+	Fetch(ctx context.Context) ([]domain.Flight, error)
 }

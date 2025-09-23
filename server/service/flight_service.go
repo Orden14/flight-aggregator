@@ -1,8 +1,10 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/Orden14/flight-aggregator/domain"
 	"github.com/Orden14/flight-aggregator/repository"
@@ -10,28 +12,36 @@ import (
 )
 
 type FlightService interface {
-	GetFlights(from string, to string, by sorter.SortBy, order sorter.Order) ([]domain.Flight, error)
+	GetFlights(ctx context.Context, from, to string, by sorter.SortBy, order sorter.Order) ([]domain.Flight, error)
 }
 
 type flightService struct {
-	repos []repository.FlightRepositoryInterface
+	repos       []repository.FlightRepositoryInterface
+	repoTimeout time.Duration
 }
 
-func NewFlightService(repos ...repository.FlightRepositoryInterface) FlightService {
-	return &flightService{repos: repos}
+func NewFlightService(timeout time.Duration, repos ...repository.FlightRepositoryInterface) FlightService {
+	if timeout <= 0 {
+		timeout = 10 * time.Second
+	}
+
+	return &flightService{
+		repos:       repos,
+		repoTimeout: timeout * time.Second,
+	}
 }
 
-func (s *flightService) GetFlights(from string, to string, by sorter.SortBy, order sorter.Order) ([]domain.Flight, error) {
+func (s *flightService) GetFlights(ctx context.Context, from, to string, by sorter.SortBy, order sorter.Order) ([]domain.Flight, error) {
 	if len(s.repos) == 0 {
 		return nil, errors.New("no repositories configured")
 	}
 
-	all, err := s.fetchAll()
-
+	all, err := s.fetchAll(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	all = s.dedupeFlights(all)
 	filtered := s.filterFlights(all, from, to)
 	sorter.SortFlights(filtered, by, order)
 	s.enrichFlights(&filtered)
@@ -39,7 +49,7 @@ func (s *flightService) GetFlights(from string, to string, by sorter.SortBy, ord
 	return filtered, nil
 }
 
-func (s *flightService) fetchAll() ([]domain.Flight, error) {
+func (s *flightService) fetchAll(ctx context.Context) ([]domain.Flight, error) {
 	var wg sync.WaitGroup
 
 	results := make(chan []domain.Flight, len(s.repos))
@@ -47,10 +57,13 @@ func (s *flightService) fetchAll() ([]domain.Flight, error) {
 
 	for _, repo := range s.repos {
 		wg.Add(1)
-
 		go func(r repository.FlightRepositoryInterface) {
 			defer wg.Done()
-			flights, err := r.Fetch()
+
+			reqCtx, cancel := context.WithTimeout(ctx, s.repoTimeout)
+			defer cancel()
+
+			flights, err := r.Fetch(reqCtx)
 
 			if err != nil {
 				errs <- err
@@ -78,6 +91,34 @@ func (s *flightService) fetchAll() ([]domain.Flight, error) {
 	return all, nil
 }
 
+func (s *flightService) dedupeFlights(in []domain.Flight) []domain.Flight {
+	if len(in) <= 1 {
+		out := make([]domain.Flight, len(in))
+		copy(out, in)
+
+		return out
+	}
+
+	best := make(map[string]domain.Flight, len(in))
+
+	for _, f := range in {
+		if cur, ok := best[f.Reference]; ok {
+			if f.Price < cur.Price || (f.Price == cur.Price && f.DepartureTime.Before(cur.DepartureTime)) {
+				best[f.Reference] = f
+			}
+		} else {
+			best[f.Reference] = f
+		}
+	}
+
+	out := make([]domain.Flight, 0, len(best))
+	for _, f := range best {
+		out = append(out, f)
+	}
+
+	return out
+}
+
 func (s *flightService) filterFlights(in []domain.Flight, from, to string) []domain.Flight {
 	if from == "" && to == "" {
 		out := make([]domain.Flight, len(in))
@@ -88,23 +129,19 @@ func (s *flightService) filterFlights(in []domain.Flight, from, to string) []dom
 
 	out := make([]domain.Flight, 0, len(in))
 
-	for _, f := range in {
-		if from != "" && f.From != from {
+	for _, flight := range in {
+		if from != "" && flight.From != from {
 			continue
 		}
 
-		if to != "" && f.To != to {
+		if to != "" && flight.To != to {
 			continue
 		}
 
-		out = append(out, f)
+		out = append(out, flight)
 	}
 
 	return out
-}
-
-func (s *flightService) sortFlights(flights []domain.Flight, by sorter.SortBy, order sorter.Order) {
-	sorter.SortFlights(flights, by, order)
 }
 
 func (s *flightService) enrichFlights(f *[]domain.Flight) {

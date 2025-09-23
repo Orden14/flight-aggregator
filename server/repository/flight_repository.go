@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -20,13 +21,20 @@ type FlightRepository struct {
 func NewFlightRepository(c config.JSONServerConfig) *FlightRepository {
 	return &FlightRepository{
 		baseURL: c.BaseURL(),
-		client:  &http.Client{Timeout: 10 * time.Second},
+		client:  &http.Client{Timeout: 0},
 	}
 }
 
-func (r *FlightRepository) Fetch() ([]domain.Flight, error) {
+func (r *FlightRepository) Fetch(ctx context.Context) ([]domain.Flight, error) {
 	url := fmt.Sprintf("%s/flights", r.baseURL)
-	resp, err := r.client.Get(url)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	
+	if err != nil {
+		return nil, fmt.Errorf("flights build request: %w", err)
+	}
+
+	resp, err := r.client.Do(req)
 
 	if err != nil {
 		return nil, fmt.Errorf("flights GET %s: %w", url, err)
@@ -40,6 +48,7 @@ func (r *FlightRepository) Fetch() ([]domain.Flight, error) {
 	}
 
 	var items []model.FlightItem
+
 	if err := json.NewDecoder(resp.Body).Decode(&items); err != nil {
 		return nil, fmt.Errorf("flights decode array: %w", err)
 	}
@@ -69,6 +78,6 @@ func (r *FlightRepository) Fetch() ([]domain.Flight, error) {
 			Currency:      f.Currency,
 		})
 	}
-	
+
 	return out, nil
 }
