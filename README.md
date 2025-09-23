@@ -6,7 +6,7 @@ The goal of the api is to get every flight to a destination and sort it by :
     - travel time
   
 # exercices : 
-- create a server
+- create a server (http.Server)
 - set 2 routes (http.ServeMux):
   - GET /health : to verify the healthiness of the server 
     - set the status response to 200 : w.WriteHeader(http.StatusCreated)
