@@ -26,7 +26,7 @@ docker-compose up -d
 
 ## Tests
 
-1. Installer les dépendances
+1. Se placer dans le dossier `/server/` Installer les dépendances
 ```bash
 cd server
 go mod tidy
@@ -37,9 +37,15 @@ go mod tidy
 go test ./test -v
 ```
 
-## Structure du projet
+## Structure du projet `server/`
 
-- `/main.go` : Point d'entrée de l'application
+- `/src/` : contient le code source de l'application
+- `/test/` : contient les tests unitaires de l'application
+
+<br />
+
+Contenu de `/src/` :
+- `/main.go` : Entrypoint de l'application
 - `/config/` : contient `config.go` pour la gestion de la configuration de l'application
 - `/httpserver/` : contient `router.go` pour la gestion des routes HTTP (equivalent d'un controleur)
 - `/handler/` : contient les handlers pour la gestion des requêtes HTTP
@@ -47,8 +53,7 @@ go test ./test -v
 - `/model/` : contient les structures de données des vols en fonction du schema de donnée des deux serveurs JSON
 - `/repository/` : contient les repositories pour la gestion des appels aux serveurs JSON
 - `/service/` : contient `flight_service.go` pour la logique métier
-- `/sorter/` : contient les fonctions de tri des vols
-- `/test/` : contient les tests unitaires de l'application
+- `/util/` : contient les utilitaires comme `/util/sorter/flight_sorter.go` pour le tri des vols
 
 ## Utilisation
 

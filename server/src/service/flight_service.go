@@ -8,6 +8,7 @@ import (
 
 	"github.com/Orden14/flight-aggregator/src/domain"
 	"github.com/Orden14/flight-aggregator/src/repository"
+	"github.com/Orden14/flight-aggregator/src/util/errtools"
 	"github.com/Orden14/flight-aggregator/src/util/sorter"
 )
 
@@ -80,7 +81,7 @@ func (flightService *flightService) fetchAll(ctx context.Context) ([]domain.Flig
 	close(results)
 	close(errs)
 
-	if firstErr := firstError(errs); firstErr != nil {
+	if firstErr := errtools.GetFirstError(errs); firstErr != nil {
 		return nil, firstErr
 	}
 
@@ -151,14 +152,4 @@ func (flightService *flightService) enrichFlights(flights *[]domain.Flight) {
 	for i := range *flights {
 		(*flights)[i].TravelTimeMinutes = int((*flights)[i].Duration().Minutes())
 	}
-}
-
-func firstError(errs <-chan error) error {
-	for err := range errs {
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
