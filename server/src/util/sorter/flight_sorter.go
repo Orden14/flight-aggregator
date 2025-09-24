@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Orden14/flight-aggregator/domain"
+	"github.com/Orden14/flight-aggregator/src/domain"
 )
 
 type SortBy string

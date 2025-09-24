@@ -4,10 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Orden14/flight-aggregator/src/domain"
+	"github.com/Orden14/flight-aggregator/src/util/sorter"
 	"github.com/stretchr/testify/require"
-
-	"github.com/Orden14/flight-aggregator/domain"
-	"github.com/Orden14/flight-aggregator/sorter"
 )
 
 func mustRFC3339(t *testing.T, s string) time.Time {

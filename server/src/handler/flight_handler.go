@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Orden14/flight-aggregator/service"
-	"github.com/Orden14/flight-aggregator/sorter"
+	"github.com/Orden14/flight-aggregator/src/service"
+	"github.com/Orden14/flight-aggregator/src/util/sorter"
 )
 
 type FlightHandler struct {

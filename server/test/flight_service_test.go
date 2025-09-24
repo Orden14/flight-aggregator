@@ -6,12 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Orden14/flight-aggregator/repository"
+	"github.com/Orden14/flight-aggregator/src/domain"
+	"github.com/Orden14/flight-aggregator/src/repository"
+	"github.com/Orden14/flight-aggregator/src/service"
+	"github.com/Orden14/flight-aggregator/src/util/sorter"
 	"github.com/stretchr/testify/require"
-
-	"github.com/Orden14/flight-aggregator/domain"
-	"github.com/Orden14/flight-aggregator/service"
-	"github.com/Orden14/flight-aggregator/sorter"
 )
 
 var _ repository.FlightRepositoryInterface = (*MockRepo)(nil)
@@ -161,10 +160,10 @@ func TestTimeoutErrorPropagates(t *testing.T) {
 		},
 	}
 
-	svc := service.NewFlightService(1, blockingRepo, okRepo)
+	flightService := service.NewFlightService(1, blockingRepo, okRepo)
 
 	start := time.Now()
-	_, err := svc.GetFlights(context.Background(), "", "", sorter.SortByPrice, sorter.OrderAsc)
+	_, err := flightService.GetFlights(context.Background(), "", "", sorter.SortByPrice, sorter.OrderAsc)
 	elapsed := time.Since(start)
 
 	require.Error(t, err)

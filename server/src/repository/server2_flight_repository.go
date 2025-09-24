@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Orden14/flight-aggregator/config"
-	"github.com/Orden14/flight-aggregator/domain"
-	"github.com/Orden14/flight-aggregator/model"
+	"github.com/Orden14/flight-aggregator/src/config"
+	"github.com/Orden14/flight-aggregator/src/domain"
+	"github.com/Orden14/flight-aggregator/src/model"
 )
 
 type Server2FlightRepository struct {
