@@ -7,12 +7,14 @@ import (
 
 type HealthHandler struct{}
 
-func NewHealthHandler() *HealthHandler { return &HealthHandler{} }
+func NewHealthHandler() *HealthHandler {
+	return &HealthHandler{}
+}
 
-func (h *HealthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+func (healthHandler *HealthHandler) ServeHTTP(writer http.ResponseWriter) {
+	writer.Header().Set("Content-Type", "application/json")
 
-	w.WriteHeader(http.StatusOK)
+	writer.WriteHeader(http.StatusOK)
 
-	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	_ = json.NewEncoder(writer).Encode(map[string]string{"status": "ok"})
 }
