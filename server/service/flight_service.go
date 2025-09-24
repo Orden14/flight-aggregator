@@ -12,7 +12,7 @@ import (
 )
 
 type FlightService interface {
-	GetFlights(ctx context.Context, from string, to string, by sorter.SortBy, order sorter.Order) ([]domain.Flight, error)
+	GetFlights(ctx context.Context, departureAirport string, arrivalAirport string, sortBy sorter.SortBy, sortOrder sorter.Order) ([]domain.Flight, error)
 }
 
 type flightService struct {
@@ -31,7 +31,7 @@ func NewFlightService(timeout time.Duration, repositories ...repository.FlightRe
 	}
 }
 
-func (flightService *flightService) GetFlights(ctx context.Context, from string, to string, by sorter.SortBy, order sorter.Order) ([]domain.Flight, error) {
+func (flightService *flightService) GetFlights(ctx context.Context, departureAirport string, arrivalAirport string, sortBy sorter.SortBy, sortOrder sorter.Order) ([]domain.Flight, error) {
 	if len(flightService.repositories) == 0 {
 		return nil, errors.New("no repositories configured")
 	}
@@ -42,8 +42,8 @@ func (flightService *flightService) GetFlights(ctx context.Context, from string,
 	}
 
 	flights = flightService.dedupeFlights(flights)
-	filteredFlights := flightService.filterFlights(flights, from, to)
-	sorter.SortFlights(filteredFlights, by, order)
+	filteredFlights := flightService.filterFlights(flights, departureAirport, arrivalAirport)
+	sorter.SortFlights(filteredFlights, sortBy, sortOrder)
 	flightService.enrichFlights(&filteredFlights)
 
 	return filteredFlights, nil
@@ -122,8 +122,8 @@ func (flightService *flightService) dedupeFlights(flights []domain.Flight) []dom
 	return dedupedFlights
 }
 
-func (flightService *flightService) filterFlights(flights []domain.Flight, from, to string) []domain.Flight {
-	if from == "" && to == "" {
+func (flightService *flightService) filterFlights(flights []domain.Flight, departureAirport string, arrivalAirport string) []domain.Flight {
+	if departureAirport == "" && arrivalAirport == "" {
 		filteredFlights := make([]domain.Flight, len(flights))
 		copy(filteredFlights, flights)
 
@@ -133,11 +133,11 @@ func (flightService *flightService) filterFlights(flights []domain.Flight, from,
 	filteredFlights := make([]domain.Flight, 0, len(flights))
 
 	for _, flight := range flights {
-		if from != "" && flight.From != from {
+		if departureAirport != "" && flight.From != departureAirport {
 			continue
 		}
 
-		if to != "" && flight.To != to {
+		if arrivalAirport != "" && flight.To != arrivalAirport {
 			continue
 		}
 

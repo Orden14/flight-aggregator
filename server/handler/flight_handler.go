@@ -19,13 +19,13 @@ func NewFlightHandler(flightService service.FlightService) *FlightHandler {
 func (flightHandler *FlightHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	query := request.URL.Query()
 
-	from := query.Get("from")
-	to := query.Get("to")
+	departureAirport := query.Get("from")
+	arrivalAirport := query.Get("to")
 
 	sortBy := sorter.NormalizeSortBy(query.Get("sort"))
 	sortOrder := sorter.NormalizeOrder(query.Get("sortOrder"))
 
-	flights, err := flightHandler.flightService.GetFlights(request.Context(), from, to, sortBy, sortOrder)
+	flights, err := flightHandler.flightService.GetFlights(request.Context(), departureAirport, arrivalAirport, sortBy, sortOrder)
 
 	if err != nil {
 		http.Error(writer, "failed to fetch flights: "+err.Error(), http.StatusBadGateway)
