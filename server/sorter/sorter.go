@@ -22,8 +22,8 @@ const (
 	OrderDesc Order = "desc"
 )
 
-func NormalizeSortBy(v string) SortBy {
-	switch strings.ToLower(v) {
+func NormalizeSortBy(inputValue string) SortBy {
+	switch strings.ToLower(inputValue) {
 	case "price":
 		return SortByPrice
 	case "travel_time", "duration":
@@ -35,8 +35,8 @@ func NormalizeSortBy(v string) SortBy {
 	}
 }
 
-func NormalizeOrder(v string) Order {
-	switch strings.ToLower(v) {
+func NormalizeOrder(inputValue string) Order {
+	switch strings.ToLower(inputValue) {
 	case "desc", "descending":
 		return OrderDesc
 	default:
@@ -44,23 +44,23 @@ func NormalizeOrder(v string) Order {
 	}
 }
 
-func SortFlights(f []domain.Flight, by SortBy, order Order) {
-	less := func(i, j int) bool { return false }
+func SortFlights(flights []domain.Flight, sortBy SortBy, sortOrder Order) {
+	compareFlights := func(i, j int) bool { return false }
 
-	switch by {
+	switch sortBy {
 	case SortByTravelTime:
-		less = func(i, j int) bool { return f[i].Duration() < f[j].Duration() }
+		compareFlights = func(i, j int) bool { return flights[i].Duration() < flights[j].Duration() }
 	case SortByDepartureDate:
-		less = func(i, j int) bool { return f[i].DepartureTime.Before(f[j].DepartureTime) }
+		compareFlights = func(i, j int) bool { return flights[i].DepartureTime.Before(flights[j].DepartureTime) }
 	default: // SortByPrice
-		less = func(i, j int) bool { return f[i].Price < f[j].Price }
+		compareFlights = func(i, j int) bool { return flights[i].Price < flights[j].Price }
 	}
 
-	sort.SliceStable(f, func(i, j int) bool {
-		if order == OrderAsc {
-			return less(i, j)
+	sort.SliceStable(flights, func(i, j int) bool {
+		if sortOrder == OrderAsc {
+			return compareFlights(i, j)
 		}
-		
-		return less(j, i)
+
+		return compareFlights(j, i)
 	})
 }
