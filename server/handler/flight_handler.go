@@ -23,7 +23,7 @@ func (flightHandler *FlightHandler) ServeHTTP(writer http.ResponseWriter, reques
 	arrivalAirport := query.Get("to")
 
 	sortBy := sorter.NormalizeSortBy(query.Get("sort"))
-	sortOrder := sorter.NormalizeOrder(query.Get("sortOrder"))
+	sortOrder := sorter.NormalizeOrder(query.Get("order"))
 
 	flights, err := flightHandler.flightService.GetFlights(request.Context(), departureAirport, arrivalAirport, sortBy, sortOrder)
 
