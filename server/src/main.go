@@ -4,11 +4,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Orden14/flight-aggregator/config"
-	"github.com/Orden14/flight-aggregator/handler"
-	"github.com/Orden14/flight-aggregator/httpserver"
-	"github.com/Orden14/flight-aggregator/repository"
-	"github.com/Orden14/flight-aggregator/service"
+	"github.com/Orden14/flight-aggregator/src/config"
+	"github.com/Orden14/flight-aggregator/src/handler"
+	"github.com/Orden14/flight-aggregator/src/httpserver"
+	"github.com/Orden14/flight-aggregator/src/repository"
+	"github.com/Orden14/flight-aggregator/src/service"
 	"github.com/spf13/viper"
 )
 

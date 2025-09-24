@@ -6,12 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Orden14/flight-aggregator/repository"
+	"github.com/Orden14/flight-aggregator/src/domain"
+	"github.com/Orden14/flight-aggregator/src/repository"
+	"github.com/Orden14/flight-aggregator/src/service"
 	"github.com/stretchr/testify/require"
-
-	"github.com/Orden14/flight-aggregator/domain"
-	"github.com/Orden14/flight-aggregator/service"
-	"github.com/Orden14/flight-aggregator/sorter"
 )
 
 var _ repository.FlightRepositoryInterface = (*MockRepo)(nil)
@@ -85,7 +83,7 @@ func TestFiltersAndSorts(t *testing.T) {
 
 	ctx := context.Background()
 
-	flights, err := svc.GetFlights(ctx, "CDG", "HND", sorter.SortByPrice, sorter.OrderAsc)
+	flights, err := svc.GetFlights(ctx, "CDG", "HND", service.SortByPrice, service.OrderAsc)
 	require.NoError(t, err)
 
 	require.Len(t, flights, 2)
@@ -139,7 +137,7 @@ func TestDedupPolicyCheapestThenEarliest(t *testing.T) {
 
 	svc := service.NewFlightService(3, repoA, repoB)
 
-	out, err := svc.GetFlights(context.Background(), "", "", sorter.SortByPrice, sorter.OrderAsc)
+	out, err := svc.GetFlights(context.Background(), "", "", service.SortByPrice, service.OrderAsc)
 	require.NoError(t, err)
 	require.Len(t, out, 1)
 	require.Equal(t, "DUP", out[0].Reference)
@@ -161,10 +159,10 @@ func TestTimeoutErrorPropagates(t *testing.T) {
 		},
 	}
 
-	svc := service.NewFlightService(1, blockingRepo, okRepo)
+	flightService := service.NewFlightService(1, blockingRepo, okRepo)
 
 	start := time.Now()
-	_, err := svc.GetFlights(context.Background(), "", "", sorter.SortByPrice, sorter.OrderAsc)
+	_, err := flightService.GetFlights(context.Background(), "", "", service.SortByPrice, service.OrderAsc)
 	elapsed := time.Since(start)
 
 	require.Error(t, err)

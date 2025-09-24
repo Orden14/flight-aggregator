@@ -4,10 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Orden14/flight-aggregator/src/domain"
+	"github.com/Orden14/flight-aggregator/src/service"
 	"github.com/stretchr/testify/require"
-
-	"github.com/Orden14/flight-aggregator/domain"
-	"github.com/Orden14/flight-aggregator/sorter"
 )
 
 func mustRFC3339(t *testing.T, s string) time.Time {
@@ -42,7 +41,7 @@ func sampleFlights(t *testing.T) []domain.Flight {
 
 func TestSortByPriceAsc(t *testing.T) {
 	flights := sampleFlights(t)
-	sorter.SortFlights(flights, sorter.SortByPrice, sorter.OrderAsc)
+	service.SortFlights(flights, service.SortByPrice, service.OrderAsc)
 
 	require.Equal(t, "R2", flights[0].Reference)
 	require.Equal(t, "R1", flights[1].Reference)
@@ -51,7 +50,7 @@ func TestSortByPriceAsc(t *testing.T) {
 
 func TestSortByDepartureDesc(t *testing.T) {
 	flights := sampleFlights(t)
-	sorter.SortFlights(flights, sorter.SortByDepartureDate, sorter.OrderDesc)
+	service.SortFlights(flights, service.SortByDepartureDate, service.OrderDesc)
 
 	require.Equal(t, "R1", flights[0].Reference)
 	require.Equal(t, "R2", flights[1].Reference)
@@ -60,7 +59,7 @@ func TestSortByDepartureDesc(t *testing.T) {
 
 func TestSortByTravelTimeAsc(t *testing.T) {
 	flights := sampleFlights(t)
-	sorter.SortFlights(flights, sorter.SortByTravelTime, sorter.OrderAsc)
+	service.SortFlights(flights, service.SortByTravelTime, service.OrderAsc)
 
 	require.Equal(t, "R2", flights[0].Reference)
 	require.Equal(t, "R1", flights[1].Reference)

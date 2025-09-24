@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Orden14/flight-aggregator/service"
-	"github.com/Orden14/flight-aggregator/sorter"
+	"github.com/Orden14/flight-aggregator/src/service"
 )
 
 type FlightHandler struct {
@@ -22,8 +21,8 @@ func (flightHandler *FlightHandler) ServeHTTP(writer http.ResponseWriter, reques
 	departureAirport := query.Get("from")
 	arrivalAirport := query.Get("to")
 
-	sortBy := sorter.NormalizeSortBy(query.Get("sort"))
-	sortOrder := sorter.NormalizeOrder(query.Get("order"))
+	sortBy := service.NormalizeSortBy(query.Get("sort"))
+	sortOrder := service.NormalizeOrder(query.Get("order"))
 
 	flights, err := flightHandler.flightService.GetFlights(request.Context(), departureAirport, arrivalAirport, sortBy, sortOrder)
 

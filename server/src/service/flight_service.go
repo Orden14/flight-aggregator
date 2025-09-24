@@ -6,13 +6,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Orden14/flight-aggregator/domain"
-	"github.com/Orden14/flight-aggregator/repository"
-	"github.com/Orden14/flight-aggregator/sorter"
+	"github.com/Orden14/flight-aggregator/src/domain"
+	"github.com/Orden14/flight-aggregator/src/repository"
 )
 
 type FlightService interface {
-	GetFlights(ctx context.Context, departureAirport string, arrivalAirport string, sortBy sorter.SortBy, sortOrder sorter.Order) ([]domain.Flight, error)
+	GetFlights(ctx context.Context, departureAirport string, arrivalAirport string, sortBy SortBy, sortOrder Order) ([]domain.Flight, error)
 }
 
 type flightService struct {
@@ -31,7 +30,7 @@ func NewFlightService(timeout time.Duration, repositories ...repository.FlightRe
 	}
 }
 
-func (flightService *flightService) GetFlights(ctx context.Context, departureAirport string, arrivalAirport string, sortBy sorter.SortBy, sortOrder sorter.Order) ([]domain.Flight, error) {
+func (flightService *flightService) GetFlights(ctx context.Context, departureAirport string, arrivalAirport string, sortBy SortBy, sortOrder Order) ([]domain.Flight, error) {
 	if len(flightService.repositories) == 0 {
 		return nil, errors.New("no repositories configured")
 	}
@@ -43,7 +42,7 @@ func (flightService *flightService) GetFlights(ctx context.Context, departureAir
 
 	flights = flightService.dedupeFlights(flights)
 	filteredFlights := flightService.filterFlights(flights, departureAirport, arrivalAirport)
-	sorter.SortFlights(filteredFlights, sortBy, sortOrder)
+	SortFlights(filteredFlights, sortBy, sortOrder)
 	flightService.enrichFlights(&filteredFlights)
 
 	return filteredFlights, nil

@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/Orden14/flight-aggregator/domain"
+	"github.com/Orden14/flight-aggregator/src/domain"
 )
 
 type FlightRepositoryInterface interface {

@@ -3,7 +3,7 @@ package httpserver
 import (
 	"net/http"
 
-	"github.com/Orden14/flight-aggregator/handler"
+	"github.com/Orden14/flight-aggregator/src/handler"
 )
 
 func NewRouter(healthHandler *handler.HealthHandler, flightHandler *handler.FlightHandler) http.Handler {
