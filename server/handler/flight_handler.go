@@ -25,10 +25,10 @@ func (flightHandler *FlightHandler) ServeHTTP(writer http.ResponseWriter, reques
 	sortBy := sorter.NormalizeSortBy(query.Get("sort"))
 	sortOrder := sorter.NormalizeOrder(query.Get("sortOrder"))
 
-	flights, errors := flightHandler.flightService.GetFlights(request.Context(), from, to, sortBy, sortOrder)
+	flights, err := flightHandler.flightService.GetFlights(request.Context(), from, to, sortBy, sortOrder)
 
-	if errors != nil {
-		http.Error(writer, "failed to fetch flights: "+errors.Error(), http.StatusBadGateway)
+	if err != nil {
+		http.Error(writer, "failed to fetch flights: "+err.Error(), http.StatusBadGateway)
 
 		return
 	}

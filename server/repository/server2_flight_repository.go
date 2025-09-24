@@ -25,19 +25,19 @@ func NewServer2FlightRepository(config config.JSONServerConfig) *Server2FlightRe
 	}
 }
 
-func (flightRepository *Server2FlightRepository) Fetch(context context.Context) ([]domain.Flight, error) {
+func (flightRepository *Server2FlightRepository) Fetch(ctx context.Context) ([]domain.Flight, error) {
 	url := fmt.Sprintf("%s/flight_to_book", flightRepository.baseURL)
 
-	request, errors := http.NewRequestWithContext(context, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 
-	if errors != nil {
-		return nil, fmt.Errorf("flight build request: %w", errors)
+	if err != nil {
+		return nil, fmt.Errorf("flight build request: %w", err)
 	}
 
-	response, errors := flightRepository.client.Do(request)
+	response, err := flightRepository.client.Do(request)
 
-	if errors != nil {
-		return nil, fmt.Errorf("flight GET %s: %w", url, errors)
+	if err != nil {
+		return nil, fmt.Errorf("flight GET %s: %w", url, err)
 	}
 
 	defer response.Body.Close()
@@ -50,8 +50,8 @@ func (flightRepository *Server2FlightRepository) Fetch(context context.Context) 
 
 	var flightItems []model.Server2FlightItem
 
-	if errors := json.NewDecoder(response.Body).Decode(&flightItems); errors != nil {
-		return nil, fmt.Errorf("flight decode array: %w", errors)
+	if err := json.NewDecoder(response.Body).Decode(&flightItems); err != nil {
+		return nil, fmt.Errorf("flight decode array: %w", err)
 	}
 
 	flightsResponse := make([]domain.Flight, 0, len(flightItems))
@@ -64,16 +64,16 @@ func (flightRepository *Server2FlightRepository) Fetch(context context.Context) 
 		firstSegment := flight.Segments[0].Flight
 		lastSegment := flight.Segments[len(flight.Segments)-1].Flight
 
-		departureTime, errors := time.Parse(time.RFC3339, firstSegment.Depart)
+		departureTime, err := time.Parse(time.RFC3339, firstSegment.Depart)
 
-		if errors != nil {
-			return nil, fmt.Errorf("flight bad depart %q: %w", firstSegment.Depart, errors)
+		if err != nil {
+			return nil, fmt.Errorf("flight bad depart %q: %w", firstSegment.Depart, err)
 		}
 
-		arrivalTime, errors := time.Parse(time.RFC3339, lastSegment.Arrive)
+		arrivalTime, err := time.Parse(time.RFC3339, lastSegment.Arrive)
 
-		if errors != nil {
-			return nil, fmt.Errorf("flight bad arrive %q: %w", lastSegment.Arrive, errors)
+		if err != nil {
+			return nil, fmt.Errorf("flight bad arrive %q: %w", lastSegment.Arrive, err)
 		}
 
 		flightsResponse = append(flightsResponse, domain.Flight{

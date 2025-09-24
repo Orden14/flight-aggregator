@@ -25,19 +25,19 @@ func NewServer1FlightRepository(config config.JSONServerConfig) *Server1FlightRe
 	}
 }
 
-func (flightRepository *Server1FlightRepository) Fetch(context context.Context) ([]domain.Flight, error) {
+func (flightRepository *Server1FlightRepository) Fetch(ctx context.Context) ([]domain.Flight, error) {
 	url := fmt.Sprintf("%s/flights", flightRepository.baseURL)
 
-	request, errors := http.NewRequestWithContext(context, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 
-	if errors != nil {
-		return nil, fmt.Errorf("flight build request: %w", errors)
+	if err != nil {
+		return nil, fmt.Errorf("flight build request: %w", err)
 	}
 
-	response, errors := flightRepository.client.Do(request)
+	response, err := flightRepository.client.Do(request)
 
-	if errors != nil {
-		return nil, fmt.Errorf("flight GET %s: %w", url, errors)
+	if err != nil {
+		return nil, fmt.Errorf("flight GET %s: %w", url, err)
 	}
 
 	defer response.Body.Close()
@@ -50,22 +50,22 @@ func (flightRepository *Server1FlightRepository) Fetch(context context.Context) 
 
 	var flightItems []model.Server1FlightItem
 
-	if errors := json.NewDecoder(response.Body).Decode(&flightItems); errors != nil {
-		return nil, fmt.Errorf("flight decode array: %w", errors)
+	if err := json.NewDecoder(response.Body).Decode(&flightItems); err != nil {
+		return nil, fmt.Errorf("flight decode array: %w", err)
 	}
 
 	flightsResponse := make([]domain.Flight, 0, len(flightItems))
 	for _, flight := range flightItems {
-		departureTime, errors := time.Parse(time.RFC3339, flight.DepartureTime)
+		departureTime, err := time.Parse(time.RFC3339, flight.DepartureTime)
 
-		if errors != nil {
-			return nil, fmt.Errorf("flight bad departureTime %q: %w", flight.DepartureTime, errors)
+		if err != nil {
+			return nil, fmt.Errorf("flight bad departureTime %q: %w", flight.DepartureTime, err)
 		}
 
-		arrivalTime, errors := time.Parse(time.RFC3339, flight.ArrivalTime)
+		arrivalTime, err := time.Parse(time.RFC3339, flight.ArrivalTime)
 
-		if errors != nil {
-			return nil, fmt.Errorf("flight bad arrivalTime %q: %w", flight.ArrivalTime, errors)
+		if err != nil {
+			return nil, fmt.Errorf("flight bad arrivalTime %q: %w", flight.ArrivalTime, err)
 		}
 
 		flightsResponse = append(flightsResponse, domain.Flight{

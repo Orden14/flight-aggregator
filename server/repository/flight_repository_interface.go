@@ -7,5 +7,5 @@ import (
 )
 
 type FlightRepositoryInterface interface {
-	Fetch(context context.Context) ([]domain.Flight, error)
+	Fetch(ctx context.Context) ([]domain.Flight, error)
 }
