@@ -14,6 +14,6 @@ type Flight struct {
 	TravelTimeMinutes int       `json:"travelTimeMinutes"`
 }
 
-func (f Flight) Duration() time.Duration {
-	return f.ArrivalTime.Sub(f.DepartureTime)
+func (flight Flight) Duration() time.Duration {
+	return flight.ArrivalTime.Sub(flight.DepartureTime)
 }

@@ -6,29 +6,29 @@ import (
 	"github.com/Orden14/flight-aggregator/handler"
 )
 
-func NewRouter(health *handler.HealthHandler, flights *handler.FlightHandler) http.Handler {
+func NewRouter(healthHandler *handler.HealthHandler, flightHandler *handler.FlightHandler) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			w.Header().Set("Allow", http.MethodGet)
-			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+	mux.HandleFunc("/health", func(writer http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodGet {
+			writer.Header().Set("Allow", http.MethodGet)
+			http.Error(writer, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 
 			return
 		}
 
-		health.ServeHTTP(w, r)
+		healthHandler.ServeHTTP(writer)
 	})
 
-	mux.HandleFunc("/flights", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			w.Header().Set("Allow", http.MethodGet)
-			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+	mux.HandleFunc("/flights", func(writer http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodGet {
+			writer.Header().Set("Allow", http.MethodGet)
+			http.Error(writer, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 
 			return
 		}
 
-		flights.ServeHTTP(w, r)
+		flightHandler.ServeHTTP(writer, request)
 	})
 
 	return mux

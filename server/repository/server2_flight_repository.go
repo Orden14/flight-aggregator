@@ -18,74 +18,75 @@ type Server2FlightRepository struct {
 	client  *http.Client
 }
 
-func NewServer2FlightRepository(c config.JSONServerConfig) *Server2FlightRepository {
+func NewServer2FlightRepository(config config.JSONServerConfig) *Server2FlightRepository {
 	return &Server2FlightRepository{
-		baseURL: c.BaseURL(),
+		baseURL: config.BaseURL(),
 		client:  &http.Client{Timeout: 0},
 	}
 }
 
-func (r *Server2FlightRepository) Fetch(ctx context.Context) ([]domain.Flight, error) {
-	url := fmt.Sprintf("%s/flight_to_book", r.baseURL)
+func (flightRepository *Server2FlightRepository) Fetch(ctx context.Context) ([]domain.Flight, error) {
+	url := fmt.Sprintf("%s/flight_to_book", flightRepository.baseURL)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 
 	if err != nil {
 		return nil, fmt.Errorf("flight build request: %w", err)
 	}
 
-	resp, err := r.client.Do(req)
+	response, err := flightRepository.client.Do(request)
 
 	if err != nil {
 		return nil, fmt.Errorf("flight GET %s: %w", url, err)
 	}
 
-	defer resp.Body.Close()
+	defer response.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<14))
-		return nil, fmt.Errorf("flight status %d: %s", resp.StatusCode, string(body))
+	if response.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(io.LimitReader(response.Body, 1<<14))
+
+		return nil, fmt.Errorf("flight status %d: %s", response.StatusCode, string(body))
 	}
 
-	var items []model.Server2FlightItem
+	var flightItems []model.Server2FlightItem
 
-	if err := json.NewDecoder(resp.Body).Decode(&items); err != nil {
+	if err := json.NewDecoder(response.Body).Decode(&flightItems); err != nil {
 		return nil, fmt.Errorf("flight decode array: %w", err)
 	}
 
-	out := make([]domain.Flight, 0, len(items))
+	flightsResponse := make([]domain.Flight, 0, len(flightItems))
 
-	for _, it := range items {
-		if len(it.Segments) == 0 {
+	for _, flight := range flightItems {
+		if len(flight.Segments) == 0 {
 			continue
 		}
 
-		first := it.Segments[0].Flight
-		last := it.Segments[len(it.Segments)-1].Flight
+		firstSegment := flight.Segments[0].Flight
+		lastSegment := flight.Segments[len(flight.Segments)-1].Flight
 
-		dep, err := time.Parse(time.RFC3339, first.Depart)
-
-		if err != nil {
-			return nil, fmt.Errorf("flight bad depart %q: %w", first.Depart, err)
-		}
-
-		arr, err := time.Parse(time.RFC3339, last.Arrive)
+		departureTime, err := time.Parse(time.RFC3339, firstSegment.Depart)
 
 		if err != nil {
-			return nil, fmt.Errorf("flight bad arrive %q: %w", last.Arrive, err)
+			return nil, fmt.Errorf("flight bad depart %q: %w", firstSegment.Depart, err)
 		}
 
-		out = append(out, domain.Flight{
-			Reference:     it.Reference,
-			FlightNumber:  first.Number,
-			From:          first.From,
-			To:            last.To,
-			DepartureTime: dep,
-			ArrivalTime:   arr,
-			Price:         it.Total.Amount,
-			Currency:      it.Total.Currency,
+		arrivalTime, err := time.Parse(time.RFC3339, lastSegment.Arrive)
+
+		if err != nil {
+			return nil, fmt.Errorf("flight bad arrive %q: %w", lastSegment.Arrive, err)
+		}
+
+		flightsResponse = append(flightsResponse, domain.Flight{
+			Reference:     flight.Reference,
+			FlightNumber:  firstSegment.Number,
+			From:          firstSegment.From,
+			To:            lastSegment.To,
+			DepartureTime: departureTime,
+			ArrivalTime:   arrivalTime,
+			Price:         flight.Total.Amount,
+			Currency:      flight.Total.Currency,
 		})
 	}
 
-	return out, nil
+	return flightsResponse, nil
 }

@@ -19,7 +19,7 @@ type AppConfig struct {
 func Load() (*AppConfig, error) {
 	viper.AutomaticEnv()
 
-	cfg := &AppConfig{
+	config := &AppConfig{
 		JServer1: JSONServerConfig{
 			Name: viper.GetString("JSERVER1_NAME"),
 			Port: viper.GetString("JSERVER1_PORT"),
@@ -30,15 +30,15 @@ func Load() (*AppConfig, error) {
 		},
 	}
 
-	if cfg.JServer1.Name == "" || cfg.JServer1.Port == "" {
+	if config.JServer1.Name == "" || config.JServer1.Port == "" {
 		return nil, fmt.Errorf("missing JSERVER1_* envs")
 	}
 
-	if cfg.JServer2.Name == "" || cfg.JServer2.Port == "" {
+	if config.JServer2.Name == "" || config.JServer2.Port == "" {
 		return nil, fmt.Errorf("missing JSERVER2_* envs")
 	}
 
-	return cfg, nil
+	return config, nil
 }
 
 func (j JSONServerConfig) BaseURL() string {

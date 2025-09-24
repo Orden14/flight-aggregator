@@ -12,69 +12,71 @@ import (
 )
 
 type FlightService interface {
-	GetFlights(ctx context.Context, from, to string, by sorter.SortBy, order sorter.Order) ([]domain.Flight, error)
+	GetFlights(ctx context.Context, departureAirport string, arrivalAirport string, sortBy sorter.SortBy, sortOrder sorter.Order) ([]domain.Flight, error)
 }
 
 type flightService struct {
-	repos       []repository.FlightRepositoryInterface
-	repoTimeout time.Duration
+	repositories      []repository.FlightRepositoryInterface
+	repositoryTimeout time.Duration
 }
 
-func NewFlightService(timeout time.Duration, repos ...repository.FlightRepositoryInterface) FlightService {
+func NewFlightService(timeout time.Duration, repositories ...repository.FlightRepositoryInterface) FlightService {
 	if timeout <= 0 {
 		timeout = 10 * time.Second
 	}
 
 	return &flightService{
-		repos:       repos,
-		repoTimeout: timeout * time.Second,
+		repositories:      repositories,
+		repositoryTimeout: timeout * time.Second,
 	}
 }
 
-func (s *flightService) GetFlights(ctx context.Context, from, to string, by sorter.SortBy, order sorter.Order) ([]domain.Flight, error) {
-	if len(s.repos) == 0 {
+func (flightService *flightService) GetFlights(ctx context.Context, departureAirport string, arrivalAirport string, sortBy sorter.SortBy, sortOrder sorter.Order) ([]domain.Flight, error) {
+	if len(flightService.repositories) == 0 {
 		return nil, errors.New("no repositories configured")
 	}
 
-	all, err := s.fetchAll(ctx)
+	flights, err := flightService.fetchAll(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	all = s.dedupeFlights(all)
-	filtered := s.filterFlights(all, from, to)
-	sorter.SortFlights(filtered, by, order)
-	s.enrichFlights(&filtered)
+	flights = flightService.dedupeFlights(flights)
+	filteredFlights := flightService.filterFlights(flights, departureAirport, arrivalAirport)
+	sorter.SortFlights(filteredFlights, sortBy, sortOrder)
+	flightService.enrichFlights(&filteredFlights)
 
-	return filtered, nil
+	return filteredFlights, nil
 }
 
-func (s *flightService) fetchAll(ctx context.Context) ([]domain.Flight, error) {
-	var wg sync.WaitGroup
+func (flightService *flightService) fetchAll(ctx context.Context) ([]domain.Flight, error) {
+	var waitGroup sync.WaitGroup
 
-	results := make(chan []domain.Flight, len(s.repos))
-	errs := make(chan error, len(s.repos))
+	results := make(chan []domain.Flight, len(flightService.repositories))
+	errs := make(chan error, len(flightService.repositories))
 
-	for _, repo := range s.repos {
-		wg.Add(1)
+	for _, flightRepository := range flightService.repositories {
+		waitGroup.Add(1)
+
 		go func(r repository.FlightRepositoryInterface) {
-			defer wg.Done()
+			defer waitGroup.Done()
 
-			reqCtx, cancel := context.WithTimeout(ctx, s.repoTimeout)
+			requestContext, cancel := context.WithTimeout(ctx, flightService.repositoryTimeout)
 			defer cancel()
 
-			flights, err := r.Fetch(reqCtx)
+			flights, err := r.Fetch(requestContext)
 
 			if err != nil {
 				errs <- err
+
 				return
 			}
 
 			results <- flights
-		}(repo)
+		}(flightRepository)
 	}
 
-	wg.Wait()
+	waitGroup.Wait()
 	close(results)
 	close(errs)
 
@@ -82,71 +84,72 @@ func (s *flightService) fetchAll(ctx context.Context) ([]domain.Flight, error) {
 		return nil, firstErr
 	}
 
-	var all []domain.Flight
+	var flights []domain.Flight
 
-	for fs := range results {
-		all = append(all, fs...)
+	for flight := range results {
+		flights = append(flights, flight...)
 	}
 
-	return all, nil
+	return flights, nil
 }
 
-func (s *flightService) dedupeFlights(in []domain.Flight) []domain.Flight {
-	if len(in) <= 1 {
-		out := make([]domain.Flight, len(in))
-		copy(out, in)
+func (flightService *flightService) dedupeFlights(flights []domain.Flight) []domain.Flight {
+	if len(flights) <= 1 {
+		out := make([]domain.Flight, len(flights))
+		copy(out, flights)
 
 		return out
 	}
 
-	best := make(map[string]domain.Flight, len(in))
+	optimalFlights := make(map[string]domain.Flight, len(flights))
 
-	for _, f := range in {
-		if cur, ok := best[f.Reference]; ok {
-			if f.Price < cur.Price || (f.Price == cur.Price && f.DepartureTime.Before(cur.DepartureTime)) {
-				best[f.Reference] = f
+	for _, flight := range flights {
+		if currentFlight, isAlreadyExisting := optimalFlights[flight.Reference]; isAlreadyExisting {
+			if flight.Price < currentFlight.Price || (flight.Price == currentFlight.Price && flight.DepartureTime.Before(currentFlight.DepartureTime)) {
+				optimalFlights[flight.Reference] = flight
 			}
 		} else {
-			best[f.Reference] = f
+			optimalFlights[flight.Reference] = flight
 		}
 	}
 
-	out := make([]domain.Flight, 0, len(best))
-	for _, f := range best {
-		out = append(out, f)
+	dedupedFlights := make([]domain.Flight, 0, len(optimalFlights))
+
+	for _, flight := range optimalFlights {
+		dedupedFlights = append(dedupedFlights, flight)
 	}
 
-	return out
+	return dedupedFlights
 }
 
-func (s *flightService) filterFlights(in []domain.Flight, from, to string) []domain.Flight {
-	if from == "" && to == "" {
-		out := make([]domain.Flight, len(in))
-		copy(out, in)
+func (flightService *flightService) filterFlights(flights []domain.Flight, departureAirport string, arrivalAirport string) []domain.Flight {
+	if departureAirport == "" && arrivalAirport == "" {
+		filteredFlights := make([]domain.Flight, len(flights))
+		copy(filteredFlights, flights)
 
-		return out
+		return filteredFlights
 	}
 
-	out := make([]domain.Flight, 0, len(in))
+	filteredFlights := make([]domain.Flight, 0, len(flights))
 
-	for _, flight := range in {
-		if from != "" && flight.From != from {
+	for _, flight := range flights {
+		if departureAirport != "" && flight.From != departureAirport {
 			continue
 		}
 
-		if to != "" && flight.To != to {
+		if arrivalAirport != "" && flight.To != arrivalAirport {
 			continue
 		}
 
-		out = append(out, flight)
+		filteredFlights = append(filteredFlights, flight)
 	}
 
-	return out
+	return filteredFlights
 }
 
-func (s *flightService) enrichFlights(f *[]domain.Flight) {
-	for i := range *f {
-		(*f)[i].TravelTimeMinutes = int((*f)[i].Duration().Minutes())
+func (flightService *flightService) enrichFlights(flights *[]domain.Flight) {
+	for i := range *flights {
+		(*flights)[i].TravelTimeMinutes = int((*flights)[i].Duration().Minutes())
 	}
 }
 

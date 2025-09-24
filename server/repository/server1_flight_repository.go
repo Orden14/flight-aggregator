@@ -18,66 +18,67 @@ type Server1FlightRepository struct {
 	client  *http.Client
 }
 
-func NewServer1FlightRepository(c config.JSONServerConfig) *Server1FlightRepository {
+func NewServer1FlightRepository(config config.JSONServerConfig) *Server1FlightRepository {
 	return &Server1FlightRepository{
-		baseURL: c.BaseURL(),
+		baseURL: config.BaseURL(),
 		client:  &http.Client{Timeout: 0},
 	}
 }
 
-func (r *Server1FlightRepository) Fetch(ctx context.Context) ([]domain.Flight, error) {
-	url := fmt.Sprintf("%s/flights", r.baseURL)
+func (flightRepository *Server1FlightRepository) Fetch(ctx context.Context) ([]domain.Flight, error) {
+	url := fmt.Sprintf("%s/flights", flightRepository.baseURL)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 
 	if err != nil {
 		return nil, fmt.Errorf("flight build request: %w", err)
 	}
 
-	resp, err := r.client.Do(req)
+	response, err := flightRepository.client.Do(request)
 
 	if err != nil {
 		return nil, fmt.Errorf("flight GET %s: %w", url, err)
 	}
 
-	defer resp.Body.Close()
+	defer response.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<14))
-		return nil, fmt.Errorf("flight status %d: %s", resp.StatusCode, string(body))
+	if response.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(io.LimitReader(response.Body, 1<<14))
+
+		return nil, fmt.Errorf("flight status %d: %s", response.StatusCode, string(body))
 	}
 
-	var items []model.Server1FlightItem
+	var flightItems []model.Server1FlightItem
 
-	if err := json.NewDecoder(resp.Body).Decode(&items); err != nil {
+	if err := json.NewDecoder(response.Body).Decode(&flightItems); err != nil {
 		return nil, fmt.Errorf("flight decode array: %w", err)
 	}
 
-	out := make([]domain.Flight, 0, len(items))
-	for _, f := range items {
-		dep, err := time.Parse(time.RFC3339, f.DepartureTime)
+	flightsResponse := make([]domain.Flight, 0, len(flightItems))
+	for _, flight := range flightItems {
+		departureTime, err := time.Parse(time.RFC3339, flight.DepartureTime)
 
 		if err != nil {
-			return nil, fmt.Errorf("flight bad departureTime %q: %w", f.DepartureTime, err)
+			return nil, fmt.Errorf("flight bad departureTime %q: %w", flight.DepartureTime, err)
 		}
 
-		arr, err := time.Parse(time.RFC3339, f.ArrivalTime)
+		arrivalTime, err := time.Parse(time.RFC3339, flight.ArrivalTime)
 
 		if err != nil {
-			return nil, fmt.Errorf("flight bad arrivalTime %q: %w", f.ArrivalTime, err)
+			return nil, fmt.Errorf("flight bad arrivalTime %q: %w", flight.ArrivalTime, err)
 		}
 
-		out = append(out, domain.Flight{
-			Reference:     f.BookingID,
-			FlightNumber:  f.FlightNumber,
-			From:          f.DepartureAirport,
-			To:            f.ArrivalAirport,
-			DepartureTime: dep,
-			ArrivalTime:   arr,
-			Price:         f.Price,
-			Currency:      f.Currency,
+		flightsResponse = append(flightsResponse, domain.Flight{
+			Reference:     flight.BookingID,
+			FlightNumber:  flight.FlightNumber,
+			From:          flight.DepartureAirport,
+			To:            flight.ArrivalAirport,
+			DepartureTime: departureTime,
+			ArrivalTime:   arrivalTime,
+			Price:         flight.Price,
+			Currency:      flight.Currency,
 		})
 	}
 
-	return out, nil
+	return flightsResponse, nil
 }

@@ -9,35 +9,36 @@ import (
 )
 
 type FlightHandler struct {
-	svc service.FlightService
+	flightService service.FlightService
 }
 
-func NewFlightHandler(svc service.FlightService) *FlightHandler {
-	return &FlightHandler{svc: svc}
+func NewFlightHandler(flightService service.FlightService) *FlightHandler {
+	return &FlightHandler{flightService: flightService}
 }
 
-func (h *FlightHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	from := q.Get("from")
-	to := q.Get("to")
+func (flightHandler *FlightHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	query := request.URL.Query()
 
-	by := sorter.NormalizeSortBy(q.Get("sort"))
-	order := sorter.NormalizeOrder(q.Get("order"))
+	departureAirport := query.Get("from")
+	arrivalAirport := query.Get("to")
 
-	flights, err := h.svc.GetFlights(r.Context(), from, to, by, order)
+	sortBy := sorter.NormalizeSortBy(query.Get("sort"))
+	sortOrder := sorter.NormalizeOrder(query.Get("order"))
+
+	flights, err := flightHandler.flightService.GetFlights(request.Context(), departureAirport, arrivalAirport, sortBy, sortOrder)
 
 	if err != nil {
-		http.Error(w, "failed to fetch flights: "+err.Error(), http.StatusBadGateway)
+		http.Error(writer, "failed to fetch flights: "+err.Error(), http.StatusBadGateway)
 
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	writer.Header().Set("Content-Type", "application/json")
 
-	json.NewEncoder(w).Encode(map[string]any{
-		"count":   len(flights),
-		"sort_by": by,
-		"order":   order,
-		"items":   flights,
+	json.NewEncoder(writer).Encode(map[string]any{
+		"flights_count": len(flights),
+		"sort_by":       sortBy,
+		"sort_order":    sortOrder,
+		"items":         flights,
 	})
 }
